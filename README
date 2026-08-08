@@ -1,7 +1,4 @@
 Wanting to find a career in IT and this will be where I track my main goals and achievements along the way.
 
 Goal 1: Establish Connection Between 2 Linux Based VM's
-I firstly swapped the VM network adapter modes both to "Internal Network" with matching names, this makes a private virtual switch that makes the network invisible to my personal device and network.
-If I were to have the VMs' network adapters set to "Bridged" instead, then they would both show as independent devices to both my personal device and network. Doing so however could lead to unnecesary conflicts 
-and interferences.
-Once both VM's were running I captured both of their Ip's by using "ip address", once I did that I could test if they could see eachother by pinging one IP from the other.
+Goal 2: Generate SSH pairing
