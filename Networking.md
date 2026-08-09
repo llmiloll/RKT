@@ -29,3 +29,26 @@ CIDR     Addresses/subnet     Usable hosts*
 /30              4                    2
 
 
+TCP, UDP, and Ports:
+0.0.0.0 (all local IPv4 addresses)
+:: (all local IPv6 addresses)
+shh port is 22
+so 0.0.0.0:22 is all local addresses listening on port 22
+using "ss -tulpn" I can see all open sockets on the host and which addresses and ports they are listening on. If I use it with heightened privileges I can also see the direct process that is using the socket.
+TCP is a reliable connection oriented transport between two endpoints. it cares about establishing a connection, sequencing data, acknowledging received data, retransmitting lost data, detecting certain connection problems, and closing the connection.
+When a connection is made the sender will also have a unique port generated so the receiver can recognize the sender throughout the connection.
+when using "ss -tn" after connecting the two machines through ssh I can see the socket has an "established" state meaning there is a connection happening. Whereas before it was showing listening which just means its waiting for a connection.
+
+"State   Local Address:Port       Peer Address:Port
+ ESTAB   10.10.10.2:51694        10.10.10.3:22"
+ 
+TCP uses a threeway handshake where machine A will broadcast that it wishes to establish a TCP connection, then machine B will receive the request and agree, once agreed upon machine A will get acknowledge it got a response so both sides can begin exchanging data. This is useful because once a TCP handshake is make the receiver can indicate what data it has received and the sender can make sure it what it sent was all received, and if not it can resend what is missing. using "sudo tcpdump -i enp0s3 -n host 10.10.10.2" I can actually see all of the packets between client and server once a connection is formed.
+TCP flags: P = PSH, . = ACK, S = SYN
+[P.] means packet contains data and acknowledging previously received data.
+[S] means I wish to establish a TCP connection with port 22 on this IP
+("10.10.10.2:52336 > 10.10.10.3:22: Flags [S]")
+[S.] means I have received your SYN and I'm willing to establish a connection
+usually followed by a [.] packet which is acknowledging the response.
+
+
+
