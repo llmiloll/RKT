@@ -1,1 +1,8 @@
+BUIILDING RKT LAN:
+First goal is to create a LAN network between 3 VMs. 
+we have MILO-01 as the server
+ANON-01 and ANON-02 as the clients.
 
+I change all network adapters to inter network effectively making a virtual ethernet onnection between all machines.
+
+running ip addr shows the interface exists but none of the device have any ip4 addresses allocated, therefor ip neigh and ip route return nothing.
