@@ -68,3 +68,19 @@ enp0s8
 10.0.3.2 gateway
     ↓
 192.168.1.1:53
+
+
+DHCP:
+When a machine joins a network without an address configured, it can ask is there a DHCP server here? If there is it can request to be configured. It  would look like so:
+
+Client                    DHCP Server
+
+  │──── DHCP Discover ────►│
+  │                        │
+  │◄──── DHCP Offer ───────│
+  │                        │
+  │──── DHCP Request ─────►│
+  │                        │
+  │◄──── DHCP ACK ─────────│
+
+The server can provide things like IP, subnet/prefix, default  gateway, DNS server, lease duration. DHCP will usually use UPD instead of TCP. The usual server socket would be UDP 67, and the client would be UDP 68. DHCP is handy because it can give address leases to devices which will expire after some time to avoid cluttering the network full of assigned addresses to devices that may not even reconnect to the network. When a lease expires the DHCP server will try and renew the devices lease before anything else to try keep the same address for that device. A DHCP server will assign a new address when the old address is no longer available, the client moves to a different network, the DCHP config changes, or if the client can't renew its existing lease
