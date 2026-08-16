@@ -6,3 +6,64 @@ ANON-01 and ANON-02 as the clients.
 I change all network adapters to inter network effectively making a virtual ethernet onnection between all machines.
 
 running ip addr shows the interface exists but none of the device have any ip4 addresses allocated, therefor ip neigh and ip route return nothing.
+
+I need to configure the interface myself by accessing the netplan config.
+
+it currently reads: 
+"network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: true"
+
+which is saying ubuntu needs to use DHCP to obtain IPv4 address. But RKT-LAN doesn't have DHCP server, so instead I'll assign static IP's to all machines.
+
+I'll do this by changing the netplan yaml to:
+"network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: false
+      addresses:
+        - 10.10.10.10/24"
+
+I'm telling the kernal to stop using DHCP and instead give the enp0s3 interface the address of 10.10.10.10 with a /24 prefix.
+
+I then apply it with sudo netplan apply and test the results with ip addr show enp0s3.
+
+inet being 10.10.10.10/24 on the enp0s3 interface proves the config has been applied properly.
+
+ip route now returns "10.10.10.0/24 dev enp0s3 ... src 10.10.10.10" which shows:
+10.10.10.0/24 is the directly connected network
+dev enp0s3 shows traffic for that network goes through that interface
+src 10.10.10.10 is the source address linux will use.
+using the /24 prefix tells linux the address belongs to 10.10.10.0/24
+meaning when we set the IP for the other machines I'll use addresses in that range.
+Since they'll be in the 10.10.10.0/24 network range linux will know not to use a gateway,
+and instead directly route the traffic through the "ethernet" interface.
+It can then use ARP to discover who owns 10.10.10.xx.
+
+When I ping 10.10.10.20 currently it returns "Destination Host Unreachable".
+and ip neigh returns "10.10.10.20 dev enp0s3 FAILED
+
+So the routing worked fine but when an ARP request was sent and there was no response on the network it returned a FAILED status.
+
+After assigning anon-01 a static ip using ping now returns ICMP packets and ip neigh now shows "10.10.10.20 dev enp0s3 lladdr <MAC> REACHABLE"
+10.10.10.20 is anon's IP, dev is the interface used, lladdr is the MAC, and REACHABLE means that linux currently considers the neighbour reachable.
+
+SSH SETUP:
+running ssh admin@10.10.10.10 returns "connection refused".
+A refusal generally means the connection reached the destination host, but nothing is accepting TCP connections on port 22. Since we know the machines can communicate we know it wont be a routing or ARP issue.
+I use systemctl status ssh on MILO-01 to see whether ssh is installed and it returns "ssh.service could not be found". So we know SSH isn't installed on the device.
+Using ss -lnt shows nothing is listening on the 22 port.
+
+After creating a new NAT interface for all machines I can now use sudo apt install openssh-server to install the required packages.
+
+
+
+
+
+
+
+
+
