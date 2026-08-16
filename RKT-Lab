@@ -57,7 +57,29 @@ A refusal generally means the connection reached the destination host, but nothi
 I use systemctl status ssh on MILO-01 to see whether ssh is installed and it returns "ssh.service could not be found". So we know SSH isn't installed on the device.
 Using ss -lnt shows nothing is listening on the 22 port.
 
-After creating a new NAT interface for all machines I can now use sudo apt install openssh-server to install the required packages.
+After creating a new NAT interface for all machines I can now use sudo apt install openssh-server to install the required packages. I realised my netplan config still wasn't configured for the new interface so I changed it to:
+"network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: false
+      addresses:
+        - 10.10.10.10/24
+    enp0s8:
+      dhcp4: true"
+this allows the NAT interface to simply use DHCP to obtain its IPv4 address.
+I then install ssh and systemctl status returns that it's installed just not running 
+so I'll run systemctl enable --now which will run ssh and make sure it runs on boot.
+systemctl status now shows ssh is active and ss -lnt shows port 22 is open and listening.
+
+ssh admin@10.10.10.10 now works with password authentication.
+ssh is currently listening on 0.0.0.0:22 which means any IPv4 on any local interface could technically bruteforce the ssh.
+
+I'll use sudo nano /etc/ssh/sshd_config to change the config to "ListenAddress 10.10.10.10"
+once saved and the service is restarted ss -lnt still returns 0.0.0.0:22
+Upon doing research the UBUNTU version I am using uses systemd socket activation by default. meaning sshd_config settings are read by a generator that configures ssh.socket.
+So my ListenAddress 10.10.10.10 can be valid while ss still shows 0.0.0.0:22 because systemd may currently own the listening socket, rather than sshd binding it directly.
+Running systemctl cat ssh.socket shows "ListenStream=0.0.0.0:22" so systemd itself is opening port 22 on all IPv4 and 6 interfaces, then handing the connection to sshd when one arrives. Ubuntu uses socket activation for OpenSSH by default.
 
 
 
